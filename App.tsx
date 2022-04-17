@@ -22,11 +22,24 @@ import {
 } from 'react-native';
 
 import {Colors, Header} from 'react-native/Libraries/NewAppScreen';
+import {Provider, useDispatch, useSelector} from 'react-redux';
+import store from './store';
 
 const App = () => {
-  const isDarkMode = useColorScheme() === 'dark';
+  return (
+    <Provider store={store}>
+      <Home />
+    </Provider>
+  );
+};
 
-  const [message, setMessage] = useState('');
+function Home() {
+  const isDarkMode = useColorScheme() === 'dark';
+  const dispatch = useDispatch();
+  const message = useSelector(state => state.message);
+
+  const setMessage = (value: string) =>
+    dispatch({type: 'app/setMessage', payload: value});
 
   return (
     <SafeAreaView>
@@ -46,7 +59,17 @@ const App = () => {
       </ScrollView>
     </SafeAreaView>
   );
-};
+}
+
+// function mapStateToProps(state) {
+//   return { todos: state.todos }
+// }
+
+// function mapDispatchToProps(dispatch) {
+//   return { actions: bindActionCreators(actionCreators, dispatch) }
+// }
+
+// export default connect(mapStateToProps, mapDispatchToProps)(TodoApp)
 
 function Form({
   defaultValue,
