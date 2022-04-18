@@ -23,23 +23,23 @@ import {
 
 import {Colors, Header} from 'react-native/Libraries/NewAppScreen';
 import {Provider, useDispatch, useSelector} from 'react-redux';
-import store from './store';
+import {PersistGate} from 'redux-persist/integration/react';
+import {asyncSetMessage, setMessage} from './app.slice';
+import {persistor, RootState, store} from './store';
 
 const App = () => {
   return (
     <Provider store={store}>
-      <Home />
+      <PersistGate loading={null} persistor={persistor}>
+        <Home />
+      </PersistGate>
     </Provider>
   );
 };
 
 function Home() {
   const isDarkMode = useColorScheme() === 'dark';
-  const dispatch = useDispatch();
-  const message = useSelector(state => state.message);
-
-  const setMessage = (value: string) =>
-    dispatch({type: 'app/setMessage', payload: value});
+  const message = useSelector<RootState>(state => state.app.message) as string;
 
   return (
     <SafeAreaView>
@@ -52,38 +52,23 @@ function Home() {
           }}>
           <View style={styles.wrap}>
             <Text>Your text will be here: {message} </Text>
-            <Form defaultValue={message} onSubmit={setMessage} />
+            <Form />
           </View>
-          <OptionList message={message} onSetMessage={setMessage} />
+          <OptionList />
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-// function mapStateToProps(state) {
-//   return { todos: state.todos }
-// }
-
-// function mapDispatchToProps(dispatch) {
-//   return { actions: bindActionCreators(actionCreators, dispatch) }
-// }
-
-// export default connect(mapStateToProps, mapDispatchToProps)(TodoApp)
-
-function Form({
-  defaultValue,
-  onSubmit,
-}: {
-  defaultValue: string;
-  onSubmit: (value: string) => void;
-}) {
+function Form() {
+  const dispatch = useDispatch();
   const [value, setValue] = useState('');
-  const handleSubmit = () => onSubmit(value);
+  const handleSubmit = () => dispatch(setMessage(value));
 
   return (
     <>
-      <Input defaultValue={defaultValue} onChange={setValue} />
+      <Input onChange={setValue} />
       <TouchableOpacity style={styles.saveBtn} onPress={handleSubmit}>
         <Text style={styles.btnText}>Show me</Text>
       </TouchableOpacity>
@@ -91,13 +76,11 @@ function Form({
   );
 }
 
-function Input({
-  defaultValue,
-  onChange,
-}: {
-  defaultValue: string;
-  onChange: (value: string) => void;
-}) {
+function Input({onChange}: {onChange: (value: string) => void}) {
+  const defaultValue = useSelector<RootState>(
+    state => state.app.message,
+  ) as string;
+
   return (
     <TextInput
       placeholder="Enter message"
@@ -108,22 +91,23 @@ function Input({
   );
 }
 
-function OptionList({
-  message,
-  onSetMessage,
-}: {
-  message: string;
-  onSetMessage: (value: string) => void;
-}) {
+function OptionList() {
   const list = ['Haha', 'Hihi', 'Hello', 'Welcome'];
+
+  const dispatch = useDispatch();
+
+  const message = useSelector<RootState>(state => state.app.message) as string;
+
+  const handleOnsetMessage = (item: string) =>
+    dispatch<any>(asyncSetMessage(item));
 
   return (
     <View style={styles.wrapBtn}>
       {list.map(item => (
         <TouchableOpacity
-          style={message == item ? styles.setBtn : styles.setBtnActive}
+          style={message === item ? styles.setBtn : styles.setBtnActive}
           key={item}
-          onPress={() => onSetMessage(item)}>
+          onPress={() => handleOnsetMessage(item)}>
           <Text style={styles.btnText}>Set: {item}</Text>
         </TouchableOpacity>
       ))}
